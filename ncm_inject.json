@@ -60,7 +60,18 @@
                 "svcReplyAndReceiveLight"            : "0x42",
                 "svcReplyAndReceive"                 : "0x43",
                 "svcReplyAndReceiveWithUserBuffer"   : "0x44",
-                "svcCallSecureMonitor"               : "0x7F"
+                "svcCreateEvent"                     : "0x45",
+                "svcReadWriteRegister"               : "0x4E",
+                "svcCreateInterruptEvent"            : "0x53",
+                "svcQueryIoMapping"                  : "0x55",
+                "svcCreateDeviceAddressSpace"        : "0x56",
+                "svcAttachDeviceAddressSpace"        : "0x57",
+                "svcDetachDeviceAddressSpace"        : "0x58",
+                "svcMapDeviceAddressSpaceAligned"    : "0x5a",
+                "svcUnmapDeviceAddressSpace"         : "0x5c",
+                "svcGetSystemInfo"                   : "0x6f",
+                "svcSetProcessMemoryPermission"      : "0x73",
+                "svcCallSecureMonitor"               : "0x7f"
             }
         }
     ]

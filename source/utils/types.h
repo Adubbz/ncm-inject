@@ -1,97 +1,81 @@
-/*
-* Copyright (c) 2018 naehrwert
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#ifndef _TYPES_H_
-#define _TYPES_H_
+/**
+ * @file switch/types.h
+ * @brief Various system types.
+ * @copyright libnx Authors
+ */
+#pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdalign.h>
 
-#define ALIGN(x, a) (((x) + (a) - 1) & ~((a) - 1))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
+/// The maximum value of a u64.
+#define U64_MAX	UINT64_MAX
 
-#define OFFSET_OF(t, m) ((u32)&((t *)NULL)->m)
-#define CONTAINER_OF(mp, t, mn) ((t *)((u32)mp - OFFSET_OF(t, mn)))
+#ifndef SSIZE_MAX
+#ifdef SIZE_MAX
+#define SSIZE_MAX ((SIZE_MAX) >> 1)
+#endif
+#endif
+
+typedef uint8_t u8;       ///<   8-bit unsigned integer.
+typedef uint16_t u16;     ///<  16-bit unsigned integer.
+typedef uint32_t u32;     ///<  32-bit unsigned integer.
+typedef uint64_t u64;     ///<  64-bit unsigned integer.
+typedef __uint128_t u128; ///< 128-bit unsigned integer.
+
+typedef int8_t s8;       ///<   8-bit signed integer.
+typedef int16_t s16;     ///<  16-bit signed integer.
+typedef int32_t s32;     ///<  32-bit signed integer.
+typedef int64_t s64;     ///<  64-bit signed integer.
+typedef __int128_t s128; ///< 128-bit unsigned integer.
+
+typedef volatile u8 vu8;     ///<   8-bit volatile unsigned integer.
+typedef volatile u16 vu16;   ///<  16-bit volatile unsigned integer.
+typedef volatile u32 vu32;   ///<  32-bit volatile unsigned integer.
+typedef volatile u64 vu64;   ///<  64-bit volatile unsigned integer.
+typedef volatile u128 vu128; ///< 128-bit volatile unsigned integer.
+
+typedef volatile s8 vs8;     ///<   8-bit volatile signed integer.
+typedef volatile s16 vs16;   ///<  16-bit volatile signed integer.
+typedef volatile s32 vs32;   ///<  32-bit volatile signed integer.
+typedef volatile s64 vs64;   ///<  64-bit volatile signed integer.
+typedef volatile s128 vs128; ///< 128-bit volatile signed integer.
+
+typedef u32 Handle;                 ///< Kernel object handle.
+typedef u32 Result;                 ///< Function error code result type.
+typedef void (*ThreadFunc)(void *); ///< Thread entrypoint function.
+typedef void (*VoidFn)(void);       ///< Function without arguments nor return value.
 
 /// Creates a bitmask from a bit number.
 #ifndef BIT
 #define BIT(n) (1U<<(n))
 #endif
 
-typedef signed char s8;
-typedef short s16;
-typedef short SHORT;
-typedef int s32;
-typedef int INT;
-typedef long LONG;
-typedef long long int s64;
-typedef unsigned char u8;
-typedef unsigned char BYTE;
-typedef unsigned short u16;
-typedef unsigned short WORD;
-typedef unsigned short WCHAR;
-typedef unsigned int u32;
-typedef unsigned int UINT;
-typedef unsigned long DWORD;
-typedef unsigned long long QWORD;
-typedef unsigned long long int u64;
-typedef volatile unsigned char vu8;
-typedef volatile unsigned short vu16;
-typedef volatile unsigned int vu32;
-
-typedef u32 Handle; ///< Kernel object handle.
-typedef u32 Result; ///< Function error code result type.
-
-#ifndef __cplusplus
-typedef int bool;
-#define true  1
-#define false 0
-#endif /* __cplusplus */
-
-#define BOOT_CFG_AUTOBOOT_EN (1 << 0)
-#define BOOT_CFG_FROM_LAUNCH (1 << 1)
-#define BOOT_CFG_SEPT_RUN    (1 << 7)
-
-#define EXTRA_CFG_KEYS    (1 << 0)
-#define EXTRA_CFG_PAYLOAD (1 << 1)
-#define EXTRA_CFG_MODULE  (1 << 2)
-
-typedef struct __attribute__((__packed__)) _boot_cfg_t
-{
-	u8  boot_cfg;
-	u8  autoboot;
-	u8  autoboot_list;
-	u8  extra_cfg;
-	u8  rsvd[128];
-} boot_cfg_t;
-
-typedef struct __attribute__((__packed__)) _ipl_ver_meta_t
-{
-	u32 magic;
-	u32 version;
-	u16 rsvd0;
-	u16 rsvd1;
-} ipl_ver_meta_t;
-
-typedef struct __attribute__((__packed__)) _reloc_meta_t
-{
-	u32 start;
-	u32 stack;
-	u32 end;
-	u32 ep;
-} reloc_meta_t;
-
+/// Packs a struct so that it won't include padding bytes.
+#ifndef PACKED
+#define PACKED     __attribute__((packed))
 #endif
+
+/// Marks a function as not returning, for the purposes of compiler optimization.
+#ifndef NORETURN
+#define NORETURN   __attribute__((noreturn))
+#endif
+
+/// Performs a dummy operation on the specified argument in order to silence compiler warnings about unused arguments.
+#ifndef IGNORE_ARG
+#define IGNORE_ARG(x) (void)(x)
+#endif
+
+/// Flags a function as deprecated.
+#ifndef DEPRECATED
+#ifndef LIBNX_NO_DEPRECATION
+#define DEPRECATED __attribute__ ((deprecated))
+#else
+#define DEPRECATED
+#endif
+#endif
+
+/// Invalid handle.
+#define INVALID_HANDLE ((Handle) 0)

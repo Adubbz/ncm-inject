@@ -20,6 +20,7 @@
 
 enum FatalReason
 {
+    Fatal_MountFailed = 0x0,
     Fatal_Test = 0xD,
     Fatal_Max
 };

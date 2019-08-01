@@ -20,9 +20,12 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
+#include "debug.h"
+#include "ncm.h"
 #include "nx/svc.h"
 #include "nx/smc.h"
 #include "utils/fatal.h"
+#include "utils/result.h"
 
 #define NCM_OFFSET_810_RTLD                0x5B4
 #define NCM_OFFSET_810_RTLD_DESTINATION    0x9C
@@ -90,14 +93,34 @@ void write_adrp_add(int reg, uintptr_t pc, uintptr_t add_rel_offset, intptr_t de
     smcWriteAddress32((void *)add_opcode_location, opcode_add);
 }
 
+void on_content_manager_created(void)
+{
+    if (R_FAILED(MountContentStorage("dbg", ContentStorageId_NandSystem))) {
+        fatal_abort(Fatal_MountFailed);
+    }
+
+    CreateFile("dbg:/cmds.log", 0);
+    log("test1\n");
+    log("test2\n");
+}
+
 void setup_hooks(void)
 {
     // rtld
     INJECT_HOOK_RELATIVE(NCM_OFFSET_810_RTLD, NCM_OFFSET_810_RTLD_DESTINATION);
+    
+    // content manager creation hook
+    INJECT_HOOK(0x35e58, on_content_manager_created);
 }
 
 void populate_function_pointers(void)
 {
+    MountContentStorage = INJECT_OFFSET(mount_content_storage_t, 0x290c0);
+    CreateFile = INJECT_OFFSET(create_file_t, 0x24eb0);
+    OpenFile = INJECT_OFFSET(open_file_t, 0x25810);
+    CloseFile = INJECT_OFFSET(close_file_t, 0x227b0);
+    WriteFile = INJECT_OFFSET(write_file_t, 0x22a30);
+    GetFileSize = INJECT_OFFSET(get_file_size_t, 0x22d60);
 }
 
 // inject main func

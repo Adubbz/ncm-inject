@@ -26,7 +26,7 @@ void __attribute__((noreturn)) fatal_abort(enum FatalReason abortReason)
     // Basic error storage for Atmosphere
     // TODO: Maybe include a small reboot2payload stub?
     error_ctx.magic = ATMOSPHERE_REBOOT_TO_FATAL_MAGIC;
-    error_ctx.title_id = 0x0100000000000000; // FS
+    error_ctx.title_id = 0x0100000000000002; // NCM
     error_ctx.error_desc = abortReason;
 
     // Copy fatal context

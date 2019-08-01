@@ -72,6 +72,13 @@ Result svcAttachDeviceAddressSpace(u64 device, Handle handle);
 Result svcQueryMemory(MemoryInfo* meminfo_ptr, u32 *pageinfo, u64 addr);
 
 /**
+ * @brief Sleeps the current thread for the specified amount of time.
+ * @param[in] nano Number of nanoseconds to sleep, or 0, -1, -2 for yield.
+ * @note Syscall number 0x0B.
+ */
+void svcSleepThread(s64 nano);
+
+/**
  * @brief Sets the memory permissions for the specified memory with the supplied process handle.
  * @param[in] proc Process handle.
  * @param[in] addr Address of the memory.
@@ -104,6 +111,8 @@ Result svcSetMemoryPermission(void* addr, u64 size, u32 perm);
  * @warning This is a privileged syscall. Use \ref envIsSyscallHinted to check if it is available.
  */
 u64 svcCallSecureMonitor(SecmonArgs* regs);
+
+
 
 #ifdef __cplusplus
 }

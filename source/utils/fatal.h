@@ -21,6 +21,10 @@
 enum FatalReason
 {
     Fatal_MountFailed = 0x0,
+    Fatal_OpenLogFailed = 0x1,
+    Fatal_GetFileSizeFailed = 0x2,
+    Fatal_LogWriteFailed = 0x3,
+    Fatal_BadLogMessage = 0x4,
     Fatal_Test = 0xD,
     Fatal_Max
 };

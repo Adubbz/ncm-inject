@@ -21,7 +21,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "debug.h"
+#include "ipc.h"
 #include "ncm.h"
+#include "nx/counter.h"
 #include "nx/svc.h"
 #include "nx/smc.h"
 #include "utils/fatal.h"
@@ -100,8 +102,10 @@ void on_content_manager_created(void)
     }
 
     CreateFile("dbg:/cmds.log", 0);
-    log("test1\n");
-    log("test2\n");
+    debug_log("test1\n");
+    debug_log("test2\n");
+
+    g_start_log_timer_s = armTicksToNs(armGetSystemTick()) / 1e+9;
 }
 
 void setup_hooks(void)
@@ -111,6 +115,9 @@ void setup_hooks(void)
     
     // content manager creation hook
     INJECT_HOOK(0x35e58, on_content_manager_created);
+
+    // location resolver manager command hooks
+    INJECT_HOOK(0x9820, OpenLocationResolver);
 }
 
 void populate_function_pointers(void)
@@ -121,6 +128,8 @@ void populate_function_pointers(void)
     CloseFile = INJECT_OFFSET(close_file_t, 0x227b0);
     WriteFile = INJECT_OFFSET(write_file_t, 0x22a30);
     GetFileSize = INJECT_OFFSET(get_file_size_t, 0x22d60);
+
+    OpenLocationResolverImpl = INJECT_OFFSET(open_location_resolver_impl_t, 0x2b030);
 }
 
 // inject main func

@@ -37,6 +37,11 @@ SVC_BEGIN svcQueryMemory
 	RET
 SVC_END
 
+SVC_BEGIN svcSleepThread
+	svc 0xB
+	ret
+SVC_END
+
 SVC_BEGIN svcSetMemoryPermission
 	SVC 0x2
 	RET

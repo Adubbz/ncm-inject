@@ -20,13 +20,19 @@
 
 enum FatalReason
 {
-    Fatal_MountFailed = 0x0,
-    Fatal_OpenLogFailed = 0x1,
-    Fatal_GetFileSizeFailed = 0x2,
-    Fatal_LogWriteFailed = 0x3,
-    Fatal_BadLogMessage = 0x4,
-    Fatal_Test = 0xD,
-    Fatal_Max
+    Fatal_SmInitFailed,
+    Fatal_FsInitFailed,
+
+    /* Log errors */
+    Fatal_LogMountFailed,
+    Fatal_CreateLogFailed,
+    Fatal_BadLogMessage,
+    Fatal_OpenLogFailed,
+    Fatal_GetFileSizeFailed,
+    Fatal_LogWriteFailed,
+
+    Fatal_Test,
+    Fatal_Max,
 };
 
 #define AMS_FATAL_ERROR_MAX_STACKTRACE 0x20

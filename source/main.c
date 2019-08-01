@@ -21,10 +21,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "debug.h"
-#include "ipc.h"
 #include "ncm.h"
 #include "nx/counter.h"
+#include "nx/fs.h"
 #include "nx/svc.h"
+#include "nx/sm.h"
 #include "nx/smc.h"
 #include "utils/fatal.h"
 #include "utils/result.h"
@@ -97,15 +98,27 @@ void write_adrp_add(int reg, uintptr_t pc, uintptr_t add_rel_offset, intptr_t de
 
 void on_content_manager_created(void)
 {
-    if (R_FAILED(MountContentStorage("dbg", ContentStorageId_NandSystem))) {
-        fatal_abort(Fatal_MountFailed);
+    Result rc = 0;
+
+    if (R_FAILED(smInitialize())) {
+        fatal_abort(Fatal_SmInitFailed);
     }
 
-    CreateFile("dbg:/cmds.log", 0);
+    if (R_FAILED(fsInitialize())) {
+        fatal_abort(Fatal_FsInitFailed);
+    }
+
+    if (R_FAILED(fsOpenContentStorageFileSystem(&g_nand_fs, FS_CONTENTSTORAGEID_NandSystem))) {
+        fatal_abort(Fatal_LogMountFailed);
+    }
+
+    fsFsDeleteFile(&g_nand_fs, "/cmds.log");
+    if (R_FAILED(rc = fsFsCreateFile(&g_nand_fs, "/cmds.log", 0, 0)) && rc != 0x402) {
+        fatal_abort(Fatal_CreateLogFailed);
+    }
+
     debug_log("test1\n");
     debug_log("test2\n");
-
-    g_start_log_timer_s = armTicksToNs(armGetSystemTick()) / 1e+9;
 }
 
 void setup_hooks(void)
@@ -122,13 +135,6 @@ void setup_hooks(void)
 
 void populate_function_pointers(void)
 {
-    MountContentStorage = INJECT_OFFSET(mount_content_storage_t, 0x290c0);
-    CreateFile = INJECT_OFFSET(create_file_t, 0x24eb0);
-    OpenFile = INJECT_OFFSET(open_file_t, 0x25810);
-    CloseFile = INJECT_OFFSET(close_file_t, 0x227b0);
-    WriteFile = INJECT_OFFSET(write_file_t, 0x22a30);
-    GetFileSize = INJECT_OFFSET(get_file_size_t, 0x22d60);
-
     OpenLocationResolverImpl = INJECT_OFFSET(open_location_resolver_impl_t, 0x2b030);
 }
 

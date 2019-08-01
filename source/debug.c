@@ -6,41 +6,32 @@
 #include "utils/result.h"
 #include "ncm.h"
 
-#define TMP_LOG_MAX 0x10000
-
-char tmp_debug_log[TMP_LOG_MAX] = {0};
+FsFileSystem g_nand_fs;
 
 void debug_log(const char* msg) {
-    size_t cur_tmp_log_size = strlen(tmp_debug_log);
-    strncat(tmp_debug_log, msg, TMP_LOG_MAX-cur_tmp_log_size);
-}
-
-void flush_debug_log(void) {
     Result rc = 0;
-    FileHandle file;
-    size_t tmp_log_sz = strlen(tmp_debug_log);
+    FsFile file;
+    size_t msg_size = strlen(msg);
 
-    if (tmp_log_sz == 0) {
+    if (msg == NULL || msg_size == 0) {
         fatal_abort(Fatal_BadLogMessage);
     }
 
-    if (R_FAILED(rc = OpenFile(&file, "dbg:/cmds.log", FsOpenMode_Write | FsOpenMode_Append))) {
-        fatal_abort(Fatal_MountFailed);
+    if (R_FAILED(fsFsOpenFile(&g_nand_fs, "/cmds.log", FS_OPEN_WRITE | FS_OPEN_APPEND, &file))) {
+        fatal_abort(Fatal_OpenLogFailed);
     }
 
     size_t file_size = 0;
 
-    if (R_FAILED(rc = GetFileSize(&file_size, file))) {
-        CloseFile(file);
+    if (R_FAILED(rc = fsFileGetSize(&file, &file_size))) {
+        fsFileClose(&file);
         fatal_abort(Fatal_GetFileSizeFailed);
     }
 
-    if (R_FAILED(rc = WriteFile(file, file_size, tmp_debug_log, tmp_log_sz, FsWriteOption_None))) {
-        //CloseFile(file);
+    if (R_FAILED(rc = fsFileWrite(&file, file_size, msg, msg_size, FS_WRITEOPTION_FLUSH))) {
+        fsFileClose(&file);
         fatal_abort(rc);
     }
 
-    CloseFile(file);
-
-    memset(tmp_debug_log, '\0', TMP_LOG_MAX);
+    fsFileClose(&file);
 }

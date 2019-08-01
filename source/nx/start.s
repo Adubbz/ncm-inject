@@ -47,6 +47,11 @@
 .global _start
 _start:
     B startup
+.org _start+0xc
+    NOP
+.org _start+0x18
+    NOP
+.org _start+0x80
 
 .section ".crt0","ax"
 startup:

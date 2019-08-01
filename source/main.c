@@ -24,6 +24,9 @@
 #include "nx/smc.h"
 #include "utils/fatal.h"
 
+#define NCM_OFFSET_810_RTLD                0x5B4
+#define NCM_OFFSET_810_RTLD_DESTINATION    0x9C
+
 // Prototypes
 void __init();
 void __initheap(void);
@@ -90,7 +93,7 @@ void write_adrp_add(int reg, uintptr_t pc, uintptr_t add_rel_offset, intptr_t de
 void setup_hooks(void)
 {
     // rtld
-    // TODO: INJECT_HOOK_RELATIVE(fs_offsets->rtld, fs_offsets->rtld_destination);
+    INJECT_HOOK_RELATIVE(NCM_OFFSET_810_RTLD, NCM_OFFSET_810_RTLD_DESTINATION);
 }
 
 void populate_function_pointers(void)
@@ -109,7 +112,6 @@ void __init()
 
     text_base = meminfo.addr;
 
-    fatal_abort(Fatal_Test);
     setup_hooks();
     populate_function_pointers();
 }

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "nx/fs.h"
+#include "nx/services/fs.h"
 
-extern FsFileSystem g_nand_fs;
-
-void debug_log(const char* msg);
-void flush_debug_log(void);
+void clear_log(void);
+void debug_log(const char* msg, ...);

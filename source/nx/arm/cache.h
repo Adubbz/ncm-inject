@@ -5,7 +5,7 @@
  * @copyright libnx Authors
  */
 #pragma once
-#include "../utils/types.h"
+#include "../types.h"
 
 /**
  * @brief Performs a data cache flush on the specified buffer.

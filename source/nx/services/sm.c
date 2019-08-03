@@ -1,11 +1,48 @@
 // Copyright 2017 plutoo
-#include "../utils/result.h"
-#include "atomics.h"
-#include "ipc.h"
+#include "../types.h"
+#include "../result.h"
+#include "../arm/atomics.h"
+#include "../kernel/ipc.h"
+#include "fatal.h"
 #include "sm.h"
 
 static Service g_smSrv;
 static u64 g_refCnt;
+
+#define MAX_OVERRIDES 32
+
+static struct {
+    u64    name;
+    Handle handle;
+} g_smOverrides[MAX_OVERRIDES];
+
+static size_t g_smOverridesNum = 0;
+
+void smAddOverrideHandle(u64 name, Handle handle)
+{
+    if (g_smOverridesNum == MAX_OVERRIDES)
+        fatalSimple(MAKERESULT(Module_Libnx, LibnxError_TooManyOverrides));
+
+    size_t i = g_smOverridesNum;
+
+    g_smOverrides[i].name   = name;
+    g_smOverrides[i].handle = handle;
+
+    g_smOverridesNum++;
+}
+
+Handle smGetServiceOverride(u64 name)
+{
+    size_t i;
+
+    for (i=0; i<g_smOverridesNum; i++)
+    {
+        if (g_smOverrides[i].name == name)
+            return g_smOverrides[i].handle;
+    }
+
+    return INVALID_HANDLE;
+}
 
 bool smHasInitialized(void) {
     return serviceIsActive(&g_smSrv);
@@ -102,13 +139,24 @@ u64 smEncodeName(const char* name)
 Result smGetService(Service* service_out, const char* name)
 {
     u64 name_encoded = smEncodeName(name);
-    Handle handle;
-    Result rc = smGetServiceOriginal(&handle, name_encoded);
+    Handle handle = smGetServiceOverride(name_encoded);
+    Result rc;
 
-    if (R_SUCCEEDED(rc))
+    if (handle != INVALID_HANDLE)
     {
-        service_out->type = ServiceType_Normal;
+        service_out->type = ServiceType_Override;
         service_out->handle = handle;
+        rc = 0;
+    }
+    else
+    {
+        rc = smGetServiceOriginal(&handle, name_encoded);
+
+        if (R_SUCCEEDED(rc))
+        {
+            service_out->type = ServiceType_Normal;
+            service_out->handle = handle;
+        }
     }
 
     return rc;
@@ -226,6 +274,45 @@ Result smUnregisterService(const char* name) {
 
         resp = r.Raw;
         rc = resp->result;
+    }
+
+    return rc;
+}
+
+Result smAtmosphereHasService(bool *out, const char *name) {
+    IpcCommand c;
+    ipcInitialize(&c);
+    Service *srv = smGetServiceSession();
+
+    struct {
+        u64 magic;
+        u64 cmd_id;
+        u64 service_name;
+    } *raw;
+
+    raw = serviceIpcPrepareHeader(srv, &c, sizeof(*raw));
+    raw->magic = SFCI_MAGIC;
+    raw->cmd_id = 65100;
+    raw->service_name = smEncodeName(name);
+
+    Result rc = serviceIpcDispatch(srv);
+
+    if (R_SUCCEEDED(rc)) {
+        IpcParsedCommand r;
+        struct {
+            u64 magic;
+            u64 result;
+            u8 has_service;
+        } *resp;
+
+        serviceIpcParse(srv, &r, sizeof(*resp));
+        resp = r.Raw;
+
+        rc = resp->result;
+
+        if (R_SUCCEEDED(rc)) {
+            *out = resp->has_service != 0;
+        }
     }
 
     return rc;

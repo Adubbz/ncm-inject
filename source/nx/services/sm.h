@@ -6,9 +6,9 @@
  * @copyright libnx Authors
  */
 #pragma once
-#include "../utils/types.h"
-#include "svc.h"
-#include "ipc.h"
+#include "../types.h"
+#include "../kernel/svc.h"
+#include "../kernel/ipc.h"
 
 /// Service type.
 typedef enum {
@@ -16,6 +16,7 @@ typedef enum {
     ServiceType_Normal,             ///< Normal service.
     ServiceType_Domain,             ///< Domain.
     ServiceType_DomainSubservice,   ///< Domain subservice;
+    ServiceType_Override,           ///< Service overriden in the homebrew environment.
 } ServiceType;
 
 /// Service object structure.
@@ -24,6 +25,15 @@ typedef struct {
     u32 object_id;
     ServiceType type;
 } Service;
+
+/**
+ * @brief Returns whether a service is overriden in the homebrew environment.
+ * @param[in] s Service object.
+ * @return true if overriden.
+ */
+static inline bool serviceIsOverride(Service* s) {
+    return s->type == ServiceType_Override;
+}
 
 /**
  * @brief Returns whether a service has been initialized.
@@ -136,6 +146,13 @@ static inline void serviceSendObject(Service* s, IpcCommand* cmd) {
  */
 static inline Result serviceConvertToDomain(Service* s) {
     Result rc = 0;
+    if (serviceIsOverride(s)) {
+        rc = ipcCloneSession(s->handle, 1, &s->handle);
+        if (R_FAILED(rc)) {
+            return rc;
+        }
+        s->type = ServiceType_Normal;
+    }
     rc = ipcConvertSessionToDomain(s->handle, &s->object_id);
     if (R_SUCCEEDED(rc)) {
         s->type = ServiceType_Domain;
@@ -158,6 +175,10 @@ static inline void serviceClose(Service* s) {
 
     case ServiceType_DomainSubservice:
         serviceCloseObjectById(s, s->object_id);
+        break;
+
+    case ServiceType_Override:
+        // Don't close because we don't own the overridden handle.
         break;
 
     case ServiceType_Uninitialized:
@@ -230,6 +251,13 @@ Result smGetService(Service* service_out, const char* name);
 Result smGetServiceOriginal(Handle* handle_out, u64 name);
 
 /**
+ * @brief Retrieves an overriden service in the homebrew environment.
+ * @param[in] name Name of the service to request (as 64-bit integer).
+ * @return IPC session handle.
+ */
+Handle smGetServiceOverride(u64 name);
+
+/**
  * @brief Creates and registers a new service within SM.
  * @param[out] handle_out Variable containing IPC port handle.
  * @param[in] name Name of the service.
@@ -264,3 +292,13 @@ Service *smGetServiceSession(void);
  * @return Encoded name.
  */
 u64    smEncodeName(const char* name);
+
+/**
+ * @brief Overrides a service with a custom IPC service handle.
+ * @param[in] name Name of the service (as 64-bit integer).
+ * @param[in] handle IPC session handle.
+ */
+void   smAddOverrideHandle(u64 name, Handle handle);
+
+
+Result smAtmosphereHasService(bool *out, const char *name);

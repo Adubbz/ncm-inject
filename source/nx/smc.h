@@ -4,8 +4,8 @@
  * @copyright libnx Authors
  */
 #pragma once
-#include "../utils/types.h"
-#include "svc.h"
+#include "kernel/svc.h"
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C" {

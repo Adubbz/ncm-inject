@@ -5,7 +5,8 @@
  * @copyright libnx Authors
  */
 #pragma once
-#include "../utils/result.h"
+#include "../result.h"
+#include "../arm/tls.h"
 #include "svc.h"
 
 /// IPC input header magic
@@ -68,6 +69,7 @@ typedef struct {
     u32 Pad[3];
 } DomainResponseHeader;
 
+
 typedef struct {
     size_t NumSend; // A
     size_t NumRecv; // B
@@ -117,16 +119,6 @@ typedef struct {
     u32 Addr;   ///< Lower 32-bits of the address of the buffer
     u32 Packed; ///< Packed data (including higher bits of the address)
 } IpcStaticRecvDescriptor;
-
-/**
- * @brief Gets the thread local storage buffer.
- * @return The thread local storage buffer.
- */
-static inline void* armGetTls(void) {
-    void* ret;
-    __asm__ ("mrs %x[data], tpidrro_el0" : [data] "=r" (ret));
-    return ret;
-}
 
 /**
  * @brief Adds a buffer to an IPC command structure.

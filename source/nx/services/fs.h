@@ -7,8 +7,8 @@
  * @copyright libnx Authors
  */
 #pragma once
-#include "../utils/types.h"
-#include "sm.h"
+#include "../types.h"
+#include "../services/sm.h"
 
 // We use wrapped handles for type safety.
 

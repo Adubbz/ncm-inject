@@ -279,6 +279,11 @@ SVC_BEGIN svcSetThreadActivity
 	ret
 SVC_END
 
+SVC_BEGIN svcGetThreadContext3
+	svc 0x33
+	ret
+SVC_END
+
 SVC_BEGIN svcCreateSession
 	stp x0, x1, [sp, #-16]!
 	svc 0x40
@@ -479,6 +484,16 @@ SVC_BEGIN svcGetThreadList
 	svc 0x66
 	ldr x2, [sp], #16
 	str w1, [x2]
+	ret
+SVC_END
+
+SVC_BEGIN svcGetDebugThreadContext
+	svc 0x67
+	ret
+SVC_END
+
+SVC_BEGIN svcSetDebugThreadContext
+	svc 0x68
 	ret
 SVC_END
 

@@ -5,7 +5,7 @@
  * @copyright libnx Authors
  */
 #pragma once
-#include "../utils/types.h"
+#include "../types.h"
 
 /// Atomically increments a 32-bit value.
 static inline u32 atomicIncrement32(u32* p) {

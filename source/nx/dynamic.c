@@ -4,7 +4,7 @@
  */
 
 #include <stddef.h>
-#include "../utils/types.h"
+#include "types.h"
 #include <elf.h>
 
 void __nx_dynamic(uintptr_t base, const Elf64_Dyn* dyn)

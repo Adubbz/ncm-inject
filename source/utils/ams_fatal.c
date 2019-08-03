@@ -16,7 +16,7 @@
  */
 
 #include <string.h>
-#include "fatal.h"
+#include "ams_fatal.h"
 
 void __attribute__((noreturn)) fatal_abort(enum FatalReason abortReason)
 {

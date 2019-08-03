@@ -6,7 +6,7 @@ endif
 
 TARGET		:=	ncm_inject
 BUILD		:=	build
-SOURCES		:=	source/nx source source/utils source/emmc source/soc source/power source/emuMMC source/FS source/libs/fatfs
+SOURCES		:=	source/nx source/nx/arm source/nx/kernel source/nx/services source source/utils
 DATA		:=	data
 INCLUDES	:=	include
 EXEFS_SRC	:=	exefs_src

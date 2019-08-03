@@ -22,13 +22,13 @@
 #include <string.h>
 #include "debug.h"
 #include "ncm.h"
-#include "nx/counter.h"
-#include "nx/fs.h"
-#include "nx/svc.h"
-#include "nx/sm.h"
+#include "nx/result.h"
 #include "nx/smc.h"
-#include "utils/fatal.h"
-#include "utils/result.h"
+#include "nx/arm/counter.h"
+#include "nx/kernel/svc.h"
+#include "nx/services/fs.h"
+#include "nx/services/sm.h"
+#include "utils/ams_fatal.h"
 
 #define NCM_OFFSET_810_RTLD                0x5B4
 #define NCM_OFFSET_810_RTLD_DESTINATION    0x9C
@@ -98,8 +98,6 @@ void write_adrp_add(int reg, uintptr_t pc, uintptr_t add_rel_offset, intptr_t de
 
 void on_content_manager_created(void)
 {
-    Result rc = 0;
-
     if (R_FAILED(smInitialize())) {
         fatal_abort(Fatal_SmInitFailed);
     }
@@ -108,17 +106,7 @@ void on_content_manager_created(void)
         fatal_abort(Fatal_FsInitFailed);
     }
 
-    if (R_FAILED(fsOpenContentStorageFileSystem(&g_nand_fs, FS_CONTENTSTORAGEID_NandSystem))) {
-        fatal_abort(Fatal_LogMountFailed);
-    }
-
-    fsFsDeleteFile(&g_nand_fs, "/cmds.log");
-    if (R_FAILED(rc = fsFsCreateFile(&g_nand_fs, "/cmds.log", 0, 0)) && rc != 0x402) {
-        fatal_abort(Fatal_CreateLogFailed);
-    }
-
-    debug_log("test1\n");
-    debug_log("test2\n");
+    clear_log();
 }
 
 void setup_hooks(void)
@@ -130,12 +118,56 @@ void setup_hooks(void)
     INJECT_HOOK(0x35e58, on_content_manager_created);
 
     // location resolver manager command hooks
-    INJECT_HOOK(0x9820, OpenLocationResolver);
+    INJECT_HOOK(0x9820, LocationResolverManagerImpl__OpenLocationResolver);
+
+    // content location resolver command hooks
+    INJECT_HOOK(0x2bca0, ContentLocationResolverImpl__ResolveProgramPath);
+    INJECT_HOOK(0x2bd20, ContentLocationResolverImpl__ResolveDataPath);
+
+    // location resolver manager result hooks
+    INJECT_HOOK(0x987c, LocationResolverManagerImpl__OpenRegisteredLocationResolverResult);
+    INJECT_HOOK(0x9898, LocationResolverManagerImpl__RefreshLocationResolverResult);
+    INJECT_HOOK(0x98cc, LocationResolverManagerImpl__OpenAddOnContentLocationResolverResult);
+
+    // registered location resolver hooks
+    INJECT_HOOK(0x2bfb8, RegisteredLocationResolverImpl__ResolveProgramPathResult);
+    INJECT_HOOK(0x2bfd8, RegisteredLocationResolverImpl__RegisterProgramPathResult);
+    INJECT_HOOK(0x2bff8, RegisteredLocationResolverImpl__UnregisterProgramPathResult);
+    INJECT_HOOK(0x2c018, RegisteredLocationResolverImpl__RedirectProgramPathResult);
+    INJECT_HOOK(0x2c038, RegisteredLocationResolverImpl__ResolveHtmlDocumentPathResult);
+    INJECT_HOOK(0x2c058, RegisteredLocationResolverImpl__RegisterHtmlDocumentPathResult);
+    INJECT_HOOK(0x2c078, RegisteredLocationResolverImpl__UnregisterHtmlDocumentPathResult);
+    INJECT_HOOK(0x2c098, RegisteredLocationResolverImpl__RedirectHtmlDocumentPathResult);
+    INJECT_HOOK(0x2c0b8, RegisteredLocationResolverImpl__RefreshResult);
+
+    // content location resolver result hooks
+    INJECT_HOOK(0x2bcb8, ContentLocationResolverImpl__ResolveProgramPathResult);
+    INJECT_HOOK(0x2bcd8, ContentLocationResolverImpl__RedirectProgramPathResult);
+    INJECT_HOOK(0x2bcf8, ContentLocationResolverImpl__ResolveApplicationControlPathResult);
+    INJECT_HOOK(0x2bd18, ContentLocationResolverImpl__ResolveApplicationHtmlDocumentPathResult);
+    INJECT_HOOK(0x2bd38, ContentLocationResolverImpl__ResolveDataPathResult);
+    INJECT_HOOK(0x2bd58, ContentLocationResolverImpl__RedirectApplicationControlPathResult);
+    INJECT_HOOK(0x2bd78, ContentLocationResolverImpl__RedirectApplicationHtmlDocumentPathResult);
+    INJECT_HOOK(0x2bd98, ContentLocationResolverImpl__ResolveApplicationLegalInformationPathResult);
+    INJECT_HOOK(0x2bdb8, ContentLocationResolverImpl__RedirectApplicationLegalInformationPathResult);
+    INJECT_HOOK(0x2bdd8, ContentLocationResolverImpl__RefreshResult);
+    INJECT_HOOK(0x2bdf8, ContentLocationResolverImpl__RedirectApplicationProgramPathResult);
+    INJECT_HOOK(0x2be18, ContentLocationResolverImpl__ClearApplicationRedirectionResult);
+    INJECT_HOOK(0x2be38, ContentLocationResolverImpl__EraseProgramRedirectionResult);
+    INJECT_HOOK(0x2be58, ContentLocationResolverImpl__EraseApplicationControlRedirectionResult);
+    INJECT_HOOK(0x2be78, ContentLocationResolverImpl__EraseApplicationHtmlDocumentRedirectionResult);
+    INJECT_HOOK(0x2be98, ContentLocationResolverImpl__EraseApplicationLegalInformationRedirectionResult);
+    INJECT_HOOK(0x2beb8, ContentLocationResolverImpl__ResolveProgramPathForDebugResult);
+    INJECT_HOOK(0x2bed8, ContentLocationResolverImpl__RedirectProgramPathForDebugResult);
+    INJECT_HOOK(0x2bef8, ContentLocationResolverImpl__RedirectApplicationProgramPathForDebugResult);
+    INJECT_HOOK(0x2bf18, ContentLocationResolverImpl__EraseProgramRedirectionForDebugResult);
 }
 
 void populate_function_pointers(void)
 {
     OpenLocationResolverImpl = INJECT_OFFSET(open_location_resolver_impl_t, 0x2b030);
+    ResolveProgramPathImpl = INJECT_OFFSET(resolve_program_path_impl_t, 0x2c400);
+    ResolveDataPathImpl = INJECT_OFFSET(resolve_data_path_impl_t, 0x2c620);
 }
 
 // inject main func

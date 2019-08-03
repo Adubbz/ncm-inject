@@ -1,9 +1,11 @@
 // Copyright 2017 plutoo
 #include <string.h>
-#include "../utils/result.h"
-#include "atomics.h"
-#include "ipc.h"
+#include "../types.h"
+#include "../result.h"
+#include "../arm/atomics.h"
+#include "../kernel/ipc.h"
 #include "fs.h"
+#include "sm.h"
 
 static Service g_fsSrv;
 static u64 g_refCnt;

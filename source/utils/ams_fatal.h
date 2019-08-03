@@ -26,10 +26,7 @@ enum FatalReason
     /* Log errors */
     Fatal_LogMountFailed,
     Fatal_CreateLogFailed,
-    Fatal_BadLogMessage,
-    Fatal_OpenLogFailed,
-    Fatal_GetFileSizeFailed,
-    Fatal_LogWriteFailed,
+    Fatal_TempLogBufferFull,
 
     Fatal_Test,
     Fatal_Max,
